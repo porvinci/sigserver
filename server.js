@@ -1,8 +1,8 @@
 'use strict'
 var log4js = require('log4js');
-// var http = require('http');
-var https = require('https');
-var fs = require('fs');
+var http = require('http');
+// var https = require('https');
+// var fs = require('fs');
 const { Server } = require('socket.io');
 
 var express = require('express');
@@ -40,17 +40,17 @@ app.get('/', (req, res) => {
 
 
 //http server
-// var http_server = http.createServer(app);
+var http_server = http.createServer(app);
 // http_server.listen(80, '0.0.0.0');
 
-var options = {
-	key : fs.readFileSync('./server.key'),
-	cert: fs.readFileSync('./server.crt')
-}
+// var options = {
+// 	key : fs.readFileSync('./server.key'),
+// 	cert: fs.readFileSync('./server.crt')
+// }
 
 //https server
-var https_server = https.createServer(options, app);
-const io = new Server(https_server, {
+// var https_server = https.createServer(options, app);
+const io = new Server(http_server, {
   cors: {
     origin: '*',
   }
@@ -107,6 +107,6 @@ io.on('connection', (socket)=> {
 	});
 
 });
-
-https_server.listen(900, () => console.log('服务器已启动'));
+const port = process.env.PORT || 900
+https_server.listen(port, () => console.log('服务器已启动'));
 
