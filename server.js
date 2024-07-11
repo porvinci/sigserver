@@ -106,6 +106,20 @@ io.on('connection', (socket)=> {
 		//io.in(room).emit('leaved', room, socket.id);
 	});
 
+	socket.on('disconnect', (room)=>{
+		console.log('有人以关闭网页都形式离开了房间')
+		socket.leave(room);
+
+		var myRoom = io.sockets.adapter.rooms.get(room); 
+		var users = (myRoom)? myRoom.size : 0;
+		logger.debug('the user number of room is: ' + users);
+
+		//socket.emit('leaved', room, socket.id);
+		//socket.broadcast.emit('leaved', room, socket.id);
+		socket.to(room).emit('bye', room, socket.id);
+	});
+
+
 });
 const port = process.env.PORT || 900
 http_server.listen(port, () => console.log('服务器已启动'));
