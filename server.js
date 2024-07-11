@@ -61,8 +61,8 @@ io.on('connection', (socket)=> {
 
 	socket.on('message', (room, data)=>{
 		logger.debug('message, room: ' + room + ", data, type:" + data.type);
-		console.log('向房间内发送消息', data)
-		socket.to(room).emit('message',room, data.type);
+		console.log('向房间内发送消息', data.type)
+		socket.to(room).emit('message',room, data);
 	});
 
 	/*
