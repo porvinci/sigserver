@@ -60,6 +60,7 @@ io.on('connection', (socket)=> {
 
 	socket.on('message', (room, data)=>{
 		logger.debug('message, room: ' + room + ", data, type:" + data.type);
+		console.log('向房间内发送消息', data)
 		socket.to(room).emit('message',room, data);
 	});
 
@@ -107,16 +108,16 @@ io.on('connection', (socket)=> {
 	});
 
 	socket.on('disconnect', (room)=>{
-		console.log('有人以关闭网页都形式离开了房间')
+		
 		socket.leave(room);
 
 		var myRoom = io.sockets.adapter.rooms.get(room); 
 		var users = (myRoom)? myRoom.size : 0;
+		console.log('有人以关闭网页都形式离开了房间，当前房间内剩余', users, '人')
 		logger.debug('the user number of room is: ' + users);
-
+		if (users > 0) socket.to(room).emit('bye', room, socket.id);
 		//socket.emit('leaved', room, socket.id);
 		//socket.broadcast.emit('leaved', room, socket.id);
-		socket.to(room).emit('bye', room, socket.id);
 	});
 
 
