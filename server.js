@@ -8,7 +8,7 @@ const { Server } = require('socket.io');
 var express = require('express');
 // var serveIndex = require('serve-index');
 
-var USERCOUNT = 3;
+var USERCOUNT = 2;
 
 log4js.configure({
     appenders: {
@@ -50,6 +50,7 @@ var http_server = http.createServer(app);
 
 //https server
 // var https_server = https.createServer(options, app);
+let usr2roomMap = new Map()
 const io = new Server(http_server, {
   cors: {
     origin: '*',
@@ -61,7 +62,7 @@ io.on('connection', (socket)=> {
 	socket.on('message', (room, data)=>{
 		logger.debug('message, room: ' + room + ", data, type:" + data.type);
 		console.log('向房间内发送消息', data)
-		socket.to(room).emit('message',room, data);
+		socket.to(room).emit('message',room, data.type);
 	});
 
 	/*
@@ -71,22 +72,20 @@ io.on('connection', (socket)=> {
 	});
 	*/
 
-	socket.on('join', (room)=>{
-		socket.join(room);
+	socket.on('join', (room) => {
 		var myRoom = io.sockets.adapter.rooms.get(room); 
 		var users = (myRoom) ? myRoom.size : 0;
 		logger.debug('the user number of room (' + room + ') is: ' + users);
-
-		if(users < USERCOUNT){
-			socket.emit('joined', room, socket.id); //发给除自己之外的房间内的所有人
-			if(users > 1){
-				socket.to(room).emit('otherjoin', room, socket.id);
-			}
-		
-		}else{
-			socket.leave(room);	
+		if (users >= USERCOUNT) { // 如果已满则不让第三人进入房间
 			socket.emit('full', room, socket.id);
+			return
 		}
+		if (users > 0){ // 房间里已经有人
+			socket.to(room).emit('otherjoin', room, socket.id);
+		}		
+		socket.join(room);
+		usr2roomMap.set(socket.id, room)
+		socket.emit('joined', room, socket.id);
 		//socket.emit('joined', room, socket.id); //发给自己
 		//socket.broadcast.emit('joined', room, socket.id); //发给除自己之外的这个节点上的所有人
 		//io.in(room).emit('joined', room, socket.id); //发给房间内的所有人
@@ -107,10 +106,9 @@ io.on('connection', (socket)=> {
 		//io.in(room).emit('leaved', room, socket.id);
 	});
 
-	socket.on('disconnect', (room)=>{
-		
+	socket.on('disconnect', () => {
+		let room = usr2roomMap.get(socket.id)
 		socket.leave(room);
-
 		var myRoom = io.sockets.adapter.rooms.get(room); 
 		var users = (myRoom)? myRoom.size : 0;
 		console.log('有人以关闭网页都形式离开了房间，当前房间内剩余', users, '人')
