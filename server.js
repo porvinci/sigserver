@@ -114,6 +114,7 @@ io.on('connection', (socket)=> {
 		console.log('有人以关闭网页都形式离开了房间，当前房间内剩余', users, '人')
 		logger.debug('the user number of room is: ' + users);
 		if (users > 0) socket.to(room).emit('bye', room, socket.id);
+		usr2roomMap.delete(socket.id)
 		//socket.emit('leaved', room, socket.id);
 		//socket.broadcast.emit('leaved', room, socket.id);
 	});
